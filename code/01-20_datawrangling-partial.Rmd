@@ -3,6 +3,7 @@ title: "02 Data wrangling"
 ---
 
 # 1) Setup  
+## Loading packages
 
 ```{r Setup, message=F}
 # Loading packages (every time you open R)
@@ -15,13 +16,15 @@ library(readr) # to export csv
 ```
 
 
+## Reading data
 ```{r Reading data}
-soyk 
+soyk = read_excel("../data/01_soybeans.xlsx")
 
 # Checking first rows
 soyk
 
 # View
+View(soyk)
 
 ```
 
@@ -30,16 +33,16 @@ This study was conducted at four different locations in one year to assess the e
 Each study was a randomized complete block design (RCBD) with K rate as the only treatment factor with levels 0, 50, 100, and 150 lbs K2O/ac.
 
 ```{r Glimpse}
-
+glimpse(soyk)
 ```
 
 ```{r Summary}
-
+summary(soyk)
 ```
 
 # 2) Data wrangling  
 ```{r soyk_1 - clean_names()}
-soyk_1 
+soyk_1 = clean_names(soyk)
 
 soyk_1
 ```
@@ -48,20 +51,30 @@ soyk_1
 ```{r soyk_2 - filter()}
 names(soyk_1)
 
-soyk_2 
+soyk_2 = filter(soyk_1,
+                k_rate_lbac ==0)
 
 soyk_2
 ```
 
 ```{r soyk_3 - mutate()}
 # Transforming K rate from lbs/ac to kg/ha
-soyk_3  
+soyk_3 = mutate(soyk_1,
+                k_rate_kgha = k_rate_lbac*0.454/0.405,
+                k_rate_kgha = round(k_rate_kgha, 0)
+                )
 
 soyk_3
 ```
 
 ```{r soyk_4 - case_when()}
-soyk_4 
+soyk_4 = mutate(soyk_3,
+                rep = case_when(
+                  plot > 100 & plot < 200 ~ 1,
+                  plot > 200 & plot < 300 ~ 2,
+                  plot > 300 & plot < 400 ~ 3,
+                  plot > 400 ~ 4
+                ))
 
 soyk_4
 
@@ -70,7 +83,10 @@ soyk_4
 ```{r soyk_5 - pivot_longer()}
 names(soyk_4)
 
-soyk_5 
+soyk_5 = pivot_longer(soyk_4,
+                      names_to = "location.k",
+                      values_to = "k_pct",
+                      cols = contains("k_pct"))
 
 soyk_5
 
