@@ -94,7 +94,10 @@ View(soyk_5)
 ```
 
 ```{r soyk_6 - separate()}
-soyk_6 
+soyk_6 = separate(soyk_5,
+                  location.k,
+                  into = c("location", "k", "pct"),
+                  sep = "_")
 
 soyk_6
 
@@ -104,20 +107,22 @@ View(soyk_6)
 ```{r soyk_7 - select()}
 names(soyk_6)
 
-soyk_7 
+soyk_7 = select(soyk_6,
+                location, rep, k_rate_kgha, k_pct)
 
 soyk_7
 ```
 
 ```{r soyk_8 - arrange()}
-soyk_8 
+soyk_8 = arrange(soyk_7, location)
 
 soyk_8
 ```
 
 ```{r soyk_9 and 10 - group_by and summarise}
 # group_by
-soyk_9 
+soyk_9 = group_by(soyk_8,
+                  location)
 
 soyk_9
 
@@ -126,13 +131,33 @@ class(soyk_8)
 class(soyk_9)
 
 # summarise
-soyk_10 
+soyk_10 = summarise(soyk_9,
+                    mean_pct = mean(k_pct),
+                    sd = sd(k_pct))
 
 soyk_10
 ```
 
 ```{r Piping it all together}
-soyk_w 
+soyk_w = soyk %>%
+  clean_names() %>%
+  mutate(k_rate_kgha = k_rate_lbac*0.454/0.405,
+                k_rate_kgha = round(k_rate_kgha, 0)
+                ) %>%
+  mutate(rep = case_when(
+      plot > 100 & plot < 200 ~ 1,
+      plot > 200 & plot < 300 ~ 2,
+      plot > 300 & plot < 400 ~ 3,
+      plot > 400 ~ 4
+    )) %>%
+  pivot_longer(names_to = "location.k",
+                      values_to = "k_pct",
+                      cols = contains("k_pct")) %>%
+  separate(location.k,
+                  into = c("location", "k", "pct"),
+                  sep = "_") %>%
+  select(location, rep, k_rate_kgha, k_pct) %>%
+  arrange(location) 
 
 soyk_w
 
@@ -141,12 +166,13 @@ soyk_w
 
 ```{r Checking if same as without pipe}
 # Same result?
-identical(soyk_7, soyk_w)
+identical(soyk_8, soyk_w)
 
 ```
 
 ```{r Saving to file for further analysis}
-
+write_csv(soyk_w,
+          "../output/soybean_processed.csv")
 
 ```
 
