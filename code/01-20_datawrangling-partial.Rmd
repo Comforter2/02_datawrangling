@@ -180,7 +180,29 @@ write_csv(soyk_w,
 Starting from soyk, use data wrangling functions in a pipe workflow to generate the average k_pct for each K rate (in kg/ha) within each location (basically, averaging over reps). You can use the chunk below to complete this quiz.
 
 ```{r assignment}
-soyk 
+soyk %>%
+  clean_names() %>%
+  mutate(k_rate_kgha = k_rate_lbac*0.454/0.405,
+                k_rate_kgha = round(k_rate_kgha, 0)
+                ) %>%
+  mutate(rep = case_when(
+      plot > 100 & plot < 200 ~ 1,
+      plot > 200 & plot < 300 ~ 2,
+      plot > 300 & plot < 400 ~ 3,
+      plot > 400 ~ 4
+    )) %>%
+  pivot_longer(names_to = "location.k",
+                      values_to = "k_pct",
+                      cols = contains("k_pct")) %>%
+  separate(location.k,
+                  into = c("location", "k", "pct"),
+                  sep = "_") %>%
+  select(location, rep, k_rate_kgha, k_pct) %>%
+  arrange(location) %>%
+  group_by(location, k_rate_kgha) %>%
+  summarise(mean_pct = mean(k_pct))
+
+  
 ```
 
 
